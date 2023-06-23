@@ -1,118 +1,118 @@
-# LeoEcsLite - Легковесный C# Entity Component System фреймворк
-Производительность, нулевые или минимальные аллокации, минимизация использования памяти, отсутствие зависимостей от любого игрового движка - это основные цели данного фреймворка.
+# LeoEcsLite - Lightweight C# Entity Component System Framework
+The main goals of this framework are performance, zero or minimal allocations, minimization of memory usage, and no dependencies on any game engine.
 
-> **ВАЖНО!** Не забывайте использовать `DEBUG`-версии билдов для разработки и `RELEASE`-версии билдов для релизов: все внутренние проверки/исключения будут работать только в `DEBUG`-версиях и удалены для увеличения производительности в `RELEASE`-версиях.
+> **IMPORTANT!** Don't forget to use `DEBUG` builds for development and `RELEASE` builds for releases: all internal checks/exceptions will work only in `DEBUG` builds and are removed for performance reasons in `RELEASE` builds.
 
-> **ВАЖНО!** LeoEcsLite-фрейморк **не потокобезопасен** и никогда не будет таким! Если вам нужна многопоточность - вы должны реализовать ее самостоятельно и интегрировать синхронизацию в виде ecs-системы.
+> **IMPORTANT!** LeoEcsLite framework is **not thread-safe** and will never be! If you need multithreading, you should implement it yourself and integrate synchronization as an ecs system.
 
-# Содержание
-* [Социальные ресурсы](#Социальные-ресурсы)
-* [Установка](#Установка)
-    * [В виде unity модуля](#В-виде-unity-модуля)
-    * [В виде исходников](#В-виде-исходников)
-    * [Прочие источники](#Прочие-источники)
-* [Основные типы](#Основные-типы)
-    * [Сущность](#Сущность)
-    * [Компонент](#Компонент)
-    * [Система](#Система)
-* [Совместное использование данных](#Совместное-использование-данных)
-* [Специальные типы](#Специальные-типы)
-    * [EcsPool](#EcsPool)
-    * [EcsFilter](#EcsFilter)
-    * [EcsWorld](#EcsWorld)
-    * [EcsSystems](#EcsSystems)
-* [Интеграция с движками](#Интеграция-с-движками)
-    * [Unity](#Unity)
-    * [Кастомный движок](#Кастомный-движок)
-* [Статьи](#Статьи)
-* [Проекты, использующие LeoECS Lite](#Проекты-использующие-LeoECS-Lite)
-    * [С исходниками](#С-исходниками)
-* [Расширения](#Расширения)
-* [Лицензия](#Лицензия)
-* [ЧаВо](#ЧаВо)
+# Table of Contents
+* [Social resources](#social-resources)
+* [Installation](#installation)
+    * [As a Unity module](#as-a-unity-module)
+    * [As source code](#as-source-code)
+    * [Other sources](#other-sources)
+* [Main Types](#main-types)
+    * [Entity](#entity)
+    * [Component](#component)
+    * [System](#system)
+* [Shared Data Usage](#shared-data-usage)
+* [Special Types](#special-types)
+    * [EcsPool](#ecspool)
+    * [EcsFilter](#ecsfilter)
+    * [EcsWorld](#ecsworld)
+    * [EcsSystems](#ecssystems)
+* [Engine Integration](#engine-integration)
+    * [Unity](#unity)
+    * [Custom Engine](#custom-engine)
+* [Articles](#articles)
+* [Projects using LeoECS Lite](#projects-using-leoecs-lite)
+    * [With Source Code](#with-source-code)
+* [Extensions](#extensions)
+* [License](#license)
+* [FAQ](#faq)
 
-# Социальные ресурсы
+# Social Resources
 [![discord](https://img.shields.io/discord/404358247621853185.svg?label=enter%20to%20discord%20server&style=for-the-badge&logo=discord)](https://discord.gg/UQjdcbcHSf)
 
-# Установка
+# Installation
 
-## В виде unity модуля
-Поддерживается установка в виде unity-модуля через git-ссылку в PackageManager или прямое редактирование `Packages/manifest.json`:
+## As a Unity module
+You can install it as a Unity module by adding the git link to the PackageManager or editing directly the `Packages/manifest.json`:
 ```
 "com.leopotam.ecslite": "https://github.com/Leopotam/ecslite.git",
 ```
-По умолчанию используется последняя релизная версия. Если требуется версия "в разработке" с актуальными изменениями - следует переключиться на ветку `develop`:
+By default, the latest release version is used. If you need the "develop" version with the latest changes, switch to the `develop` branch:
 ```
 "com.leopotam.ecslite": "https://github.com/Leopotam/ecslite.git#develop",
 ```
 
-## В виде исходников
-Код так же может быть склонирован или получен в виде архива со страницы релизов.
+## As source code
+You can also clone the code or obtain it as an archive from the release page.
 
-## Прочие источники
-Официальная работоспособная версия размещена по адресу [https://github.com/Leopotam/ecslite](https://github.com/Leopotam/ecslite), все остальные версии (включая *nuget*, *npm* и прочие репозитории) являются неофициальными клонами или сторонним кодом с неизвестным содержимым.
+## Other Sources
+The official working version is located at [https://github.com/Leopotam/ecslite](https://github.com/Leopotam/ecslite), all other versions (including *nuget*, *npm*, and other repositories) are unofficial clones or third-party code with unknown contents.
 
-> **ВАЖНО!** Использование этих источников не рекомендуется, только на свой страх и риск.
+> **IMPORTANT!** Using these sources is not recommended, only at your own risk.
 
-# Основные типы
+# Main Types
 
-## Сущность
-Сама по себе ничего не значит и не существует, является исключительно контейнером для компонентов. Реализована как `int`:
+## Entity
+It doesn't mean anything by itself, and exists solely as a container for components. Implemented as an `int`:
 ```c#
-// Создаем новую сущность в мире.
+// Create a new entity in the world.
 int entity = _world.NewEntity ();
 
-// Любая сущность может быть удалена, при этом сначала все компоненты будут автоматически удалены и только потом энтити будет считаться уничтоженной. 
+// Any entity can be removed, all its components will be automatically removed first, and only then the entity will be considered destroyed. 
 world.DelEntity (entity);
 
-// Компоненты с любой сущности могут быть скопированы на другую. Если исходная или целевая сущность не существует - будет брошено исключение в DEBUG-версии.
+// Components from any entity can be copied to another. If the source or target entity does not exist, an exception will be thrown in DEBUG builds.
 world.CopyEntity (srcEntity, dstEntity);
 ```
 
-> **ВАЖНО!** Сущности не могут существовать без компонентов и будут автоматически уничтожаться при удалении последнего компонента на них.
+> **IMPORTANT!** Entities cannot exist without components and will be automatically destroyed when their last component is removed.
 
-## Компонент
-Является контейнером для данных пользователя и не должен содержать логику (допускаются минимальные хелперы, но не куски основной логики):
+## Component
+It is a container for user data and should not contain any logic (minimal helpers are allowed, but not chunks of the main logic):
 ```c#
 struct Component1 {
     public int Id;
     public string Name;
 }
 ```
-Компоненты могут быть добавлены, запрошены или удалены через [компонентные пулы](#ecspool).
+The components can be added, requested or removed through [component pools](#ecspool).
 
-## Система
-Является контейнером для основной логики для обработки отфильтрованных сущностей. Существует в виде пользовательского класса, реализующего как минимум один из `IEcsInitSystem`, `IEcsDestroySystem`, `IEcsRunSystem` (и прочих поддерживаемых) интерфейсов:
+## System
+It is a container for the main logic to process filtered entities. It exists as a user class implementing at least one of `IEcsInitSystem`, `IEcsDestroySystem`, `IEcsRunSystem` (and other supported) interfaces:
 ```c#
-class UserSystem : IEcsPreInitSystem, IEcsInitSystem, IEcsRunSystem, IEcsPostRunSystem, IEcsDestroySystem, IEcsPostDestroySystem {
+class UserSystem: IEcsPreInitSystem, IEcsInitSystem, IEcsRunSystem, IEcsPostRunSystem, IEcsDestroySystem, IEcsPostDestroySystem {
     public void PreInit (IEcsSystems systems) {
-        // Будет вызван один раз в момент работы IEcsSystems.Init() и до срабатывания IEcsInitSystem.Init() у всех систем.
+        // Will be called once during IEcsSystems.Init() and before IEcsInitSystem.Init() is triggered for all systems.
     }
-    
+
     public void Init (IEcsSystems systems) {
-        // Будет вызван один раз в момент работы IEcsSystems.Init() и после срабатывания IEcsPreInitSystem.PreInit() у всех систем.
+        // Will be called once during IEcsSystems.Init() after IEcsPreInitSystem.PreInit() is triggered for all systems.
     }
-    
+
     public void Run (IEcsSystems systems) {
-        // Будет вызван один раз в момент работы IEcsSystems.Run().
+        // Will be called once during IEcsSystems.Run().
     }
-    
+
     public void PostRun (IEcsSystems systems) {
-        // Будет вызван один раз в момент работы IEcsSystems.Run() после срабатывания IEcsRunSystem.Run() у всех систем.
+        // Will be called once during IEcsSystems.Run() after IEcsRunSystem.Run() is triggered for all systems.
     }
 
     public void Destroy (IEcsSystems systems) {
-        // Будет вызван один раз в момент работы IEcsSystems.Destroy() и до срабатывания IEcsPostDestroySystem.PostDestroy() у всех систем.
+        // Will be called once during IEcsSystems.Destroy() and before IEcsPostDestroySystem.PostDestroy() is triggered for all systems.
     }
     
     public void PostDestroy (IEcsSystems systems) {
-        // Будет вызван один раз в момент работы IEcsSystems.Destroy() и после срабатывания IEcsDestroySystem.Destroy() у всех систем.
+        // Will be called once during IEcsSystems.Destroy() after IEcsDestroySystem.Destroy() is triggered for all systems.
     }
 }
 ```
 
-# Совместное использование данных
-Экземпляр любого кастомного типа (класса) может быть одновременно подключен ко всем системам:
+# Data sharing
+An instance of any custom type (class) can be connected to all systems simultaneously:
 ```c#
 class SharedData {
     public string PrefabsPath;
@@ -124,65 +124,64 @@ systems
     .Add (new TestSystem1 ())
     .Init ();
 ...
-class TestSystem1 : IEcsInitSystem {
-    public void Init(IEcsSystems systems) {
-        SharedData shared = systems.GetShared<SharedData> (); 
+class TestSystem1: IEcsInitSystem {
+    public void Init (IEcsSystems systems) {
+        SharedData shared = systems.GetShared<SharedData> ();
         string prefabPath = string.Format (shared.PrefabsPath, 123);
-        // prefabPath = "Items/123" к этому моменту.
-    } 
+        // prefabPath = "Items/123" at this point.
+    }
 }
 ```
 
-# Специальные типы
+# Special types
 
 ## EcsPool
-Является контейнером для компонентов, предоставляет апи для добавления / запроса / удаления компонентов на сущности:
+It is a container for components, provides an API for adding / querying / removing components on entities:
 ```c#
 int entity = world.NewEntity ();
-EcsPool<Component1> pool = world.GetPool<Component1> (); 
+EcsPool<Component1> pool = world.GetPool<Component1> ();
 
-// Add() добавляет компонент к сущности. Если компонент уже существует - будет брошено исключение в DEBUG-версии.
+// Add() adds a component to the entity. If the component already exists, an exception will be thrown in DEBUG version.
 ref Component1 c1 = ref pool.Add (entity);
 
-// Has() проверяет наличие компонента на сущности.
+// Has() checks if a component exists on the entity.
 bool c1Exists = pool.Has (entity);
 
-// Get() возвращает существующий на сущности компонент. Если компонент не существует - будет брошено исключение в DEBUG-версии.
+// Get() returns an existing component on the entity. If the component does not exist, an exception will be thrown in DEBUG version.
 ref Component1 c1 = ref pool.Get (entity);
 
-// Del() удаляет компонент с сущности. Если компонента не было - никаких ошибок не будет. Если это был последний компонент - сущность будет удалена автоматически.
+// Del() removes a component from the entity. If there was no component, there will be no errors. If it was the last component - the entity will be removed automatically.
 pool.Del (entity);
 
-// Copy() выполняет копирование всех компонентов с одной сущности на другую. Если исходная или целевая сущность не существует - будет брошено исключение в DEBUG-версии.
+// Copy() performs a copy of all components from one entity to another. If the source or target entity does not exist, an exception will be thrown in DEBUG version.
 pool.Copy (srcEntity, dstEntity);
-
 ```
 
-> **ВАЖНО!** После удаления, компонент будет помещен в пул для последующего переиспользования. Все поля компонента будут сброшены в значения по умолчанию автоматически.
+> **IMPORTANT!** After deletion, the component will be placed in the pool for subsequent reuse. All component fields will be reset to default values automatically.
 
 ## EcsFilter
-Является контейнером для хранения отфильтрованных сущностей по наличию или отсутствию определенных компонентов:
+It is a container for storing filtered entities based on the presence or absence of certain components:
 ```c#
-class WeaponSystem : IEcsInitSystem, IEcsRunSystem {
+class WeaponSystem: IEcsInitSystem, IEcsRunSystem {
     EcsFilter _filter;
     EcsPool<Weapon> _weapons;
-    
+
     public void Init (IEcsSystems systems) {
-        // Получаем экземпляр мира по умолчанию.
+        // Get the default world instance.
         EcsWorld world = systems.GetWorld ();
-        
-        // Мы хотим получить все сущности с компонентом "Weapon" и без компонента "Health".
-        // Фильтр хранит только сущности, сами даные лежат в пуле компонентов "Weapon".
-        // Фильтр может собираться динамически каждый раз, но рекомендуется кеширование.
+
+        // We want to get all entities with the "Weapon" component and without the "Health" component.
+        // The filter only stores entities, the data itself is stored in the "Weapon" component pool.
+        // The filter can be dynamically assembled each time, but caching is recommended.
         _filter = world.Filter<Weapon> ().Exc<Health> ().End ();
-        
-        // Запросим и закешируем пул компонентов "Weapon".
+
+        // Request and cache the "Weapon" component pool.
         _weapons = world.GetPool<Weapon> ();
         
-        // Создаем новую сущность для теста.
-        int entity = world.NewEntity ();
+        // Create a new entity for testing.
+        int entity = systems.GetWorld ().NewEntity ();
         
-        // И добавляем к ней компонент "Weapon" - эта сущность должна попасть в фильтр.
+        // Add a "Weapon" component to this entity - it must be included in the filter.
         _weapons.Add (entity);
     }
 
@@ -195,24 +194,24 @@ class WeaponSystem : IEcsInitSystem, IEcsRunSystem {
 }
 ```
 
-Дополнительные требования к отфильтровываемым сущностям могут быть добавлены через методы `Inc<>()` / `Exc<>()`.
+Additional requirements for filtered entities can be added through the `Inc<>()` / `Exc<>()` methods.
 
-> **ВАЖНО!** Фильтры поддерживают любое количество требований к компонентам, но один и тот же компонент не может быть в списках "include" и "exclude".
+> **IMPORTANT!** Filters support any number of component requirements, but the same component cannot be included in both the "included" and "excluded" lists.
 
 ## EcsWorld
-Является контейнером для всех сущностей, компонентых пулов и фильтров, данные каждого экземпляра уникальны и изолированы от других миров.
+It is a container for all entities, component pools and filters. The data of each instance of the world is unique and isolated from other worlds.
 
-> **ВАЖНО!** Необходимо вызывать `EcsWorld.Destroy()` у экземпляра мира если он больше не нужен.
+> **IMPORTANT!** You should call `EcsWorld.Destroy()` on an instance of the world if you no longer need it.
 
 ## EcsSystems
-Является контейнером для систем, которыми будет обрабатываться `EcsWorld`-экземпляр мира:
+It is a container for the systems that will operate on the `EcsWorld` instance:
 ```c#
 class Startup : MonoBehaviour {
     EcsWorld _world;
     IEcsSystems _systems;
 
     void Start () {
-        // Создаем окружение, подключаем системы.
+        // Create an environment, connect the systems.
         _world = new EcsWorld ();
         _systems = new EcsSystems (_world);
         _systems
@@ -221,17 +220,17 @@ class Startup : MonoBehaviour {
     }
     
     void Update () {
-        // Выполняем все подключенные системы.
+        // Execute all connected systems.
         _systems?.Run ();
     }
 
     void OnDestroy () {
-        // Уничтожаем подключенные системы.
+        // Destroy connected systems.
         if (_systems != null) {
             _systems.Destroy ();
             _systems = null;
         }
-        // Очищаем окружение.
+        // Clean up the environment.
         if (_world != null) {
             _world.Destroy ();
             _world = null;
@@ -240,19 +239,19 @@ class Startup : MonoBehaviour {
 }
 ```
 
-> **ВАЖНО!** Необходимо вызывать `IEcsSystems.Destroy()` у экземпляра группы систем если он больше не нужен.
+> **IMPORTANT!** You should call `IEcsSystems.Destroy()` on a group of systems if you no longer need them.
 
-# Интеграция с движками
+# Integrating with Engines
 
 ## Unity
-> Проверено на Unity 2020.3 (не зависит от нее) и содержит asmdef-описания для компиляции в виде отдельных сборок и уменьшения времени рекомпиляции основного проекта.
+> Tested on Unity 2020.3 (is not dependent on it) and contains asmdef descriptions for compiling into separate assemblies and reducing main project recompilation time.
 
-[Интеграция в Unity editor](https://github.com/Leopotam/ecslite-unityeditor) содержит шаблоны кода, а так же предоставляет мониторинг состояния мира.
+[Unity Editor Integration](https://github.com/Leopotam/ecslite-unityeditor) contains code templates and monitoring of world status.
 
-## Кастомный движок
-> Для использования фреймворка требуется C#7.3 или выше.
+## Custom Engines
+> Requires C# 7.3 or higher to use the framework.
 
-Каждая часть примера ниже должна быть корректно интегрирована в правильное место выполнения кода движком:
+Each part of the example below should be correctly integrated into the correct place in the engine code execution:
 ```c#
 using Leopotam.EcsLite;
 
@@ -260,30 +259,30 @@ class EcsStartup {
     EcsWorld _world;
     IEcsSystems _systems;
 
-    // Инициализация окружения.
+    // Environment initialization.
     void Init () {        
         _world = new EcsWorld ();
         _systems = new EcsSystems (_world);
         _systems
-            // Дополнительные экземпляры миров
-            // должны быть зарегистрированы здесь.
+            // Additional instances of the world
+            // should be registered here.
             // .AddWorld (customWorldInstance, "events")
             
-            // Системы с основной логикой должны
-            // быть зарегистрированы здесь.
+            // Systems with the main logic should
+            // be registered here.
             // .Add (new TestSystem1 ())
             // .Add (new TestSystem2 ())
             
             .Init ();
     }
 
-    // Метод должен быть вызван из
-    // основного update-цикла движка.
+    // The method must be called from
+    // the main update loop of the engine.
     void UpdateLoop () {
         _systems?.Run ();
     }
 
-    // Очистка окружения.
+    // Clear the environment.
     void Destroy () {
         if (_systems != null) {
             _systems.Destroy ();
@@ -297,8 +296,8 @@ class EcsStartup {
 }
 ```
 
-# Проекты, использующие LeoECS Lite
-## С исходниками
+# Projects Using LeoECS Lite
+## With Source
 
 * ["SlimeHunter"](https://github.com/JimboA/SlimeHunter-LeoEcsLite)
   
@@ -314,55 +313,55 @@ class EcsStartup {
 
   [![](https://github.com/7Bpencil/sharpPhysics/raw/master/pictures/preview.png)](https://github.com/7Bpencil/sharpPhysics)
 
-## Без исходников
+## Without Source
 
 * [Microbiome (WIP)](https://vk.com/microbiomegame)
 
   [![](https://img.youtube.com/vi/WTciasBN2eQ/0.jpg)](https://www.youtube.com/watch?v=WTciasBN2eQ)
 
-# Расширения
-* [Инъекция зависимостей](https://github.com/Leopotam/ecslite-di)
-* [Расширенные системы](https://github.com/Leopotam/ecslite-extendedsystems)
-* [Поддержка многопоточности](https://github.com/Leopotam/ecslite-threads)
-* [Интеграция в редактор Unity](https://github.com/Leopotam/ecslite-unityeditor)
-* [Поддержка Unity uGui](https://github.com/Leopotam/ecslite-unity-ugui)
+# Extensions
+* [Dependency Injection](https://github.com/Leopotam/ecslite-di)
+* [Extended Systems](https://github.com/Leopotam/ecslite-extendedsystems)
+* [Multithreading support](https://github.com/Leopotam/ecslite-threads)
+* [Integration into Unity Editor](https://github.com/Leopotam/ecslite-unityeditor)
+* [Support for Unity uGui](https://github.com/Leopotam/ecslite-unity-ugui)
 * [Unity Physx events support](https://github.com/supremestranger/leoecs-lite-physics)
 * [Multiple Shared injection](https://github.com/GoodCatGames/ecslite-multiple-shared)
 * [EasyEvents](https://github.com/7Bpencil/ecslite-easyevents)
 * [Entity command buffer](https://github.com/JimboA/EcsLiteEntityCommandBuffer)
-* [Интеграция в редактор Unity на базе UIToolkit](https://github.com/Mitfart/LeoECSLite.UnityIntegration)
+* [Integration into Unity Editor based on UIToolkit](https://github.com/Mitfart/LeoECSLite.UnityIntegration)
 * [Unity Entity Converter](https://github.com/AndreyBirchenko/LeoEcsLiteEntityConverter)
 * [Interval Systems](https://github.com/nenuacho/ecslite-interval-systems)
 * [Quadtree Systems](https://github.com/nenuacho/ecslite-quadtree)
 
-# Лицензия
-Фреймворк выпускается под двумя лицензиями, [подробности тут](./LICENSE.md).
+# License
+The framework is released under two licenses, [details here](./LICENSE.md).
 
-В случаях лицензирования по условиям MIT-Red не стоит расчитывать на
-персональные консультации или какие-либо гарантии.
+In cases of licensing under the MIT-Red terms, do not expect
+personal consultations or any warranties.
 
-# ЧаВо
+# FAQ
 
-### В чем отличие от старой версии LeoECS?
+### What is the difference from the old version of LeoECS?
 
-Я предпочитаю называть их `лайт` (ecs-lite) и `классика` (leoecs). Основные отличия `лайта` следующие:
-* Кодовая база фреймворка уменьшилась в 2 раза, ее стало проще поддерживать и расширять.
-* `Лайт` не является порезанной версией `классики`, весь функционал сохранен в виде ядра и внешних модулей.
-* Отсутствие каких-либо статичных данных в ядре.
-* Отсутствие кешей компонентов в фильтрах, это уменьшает потребление памяти и увеличивает скорость перекладывания сущностей по фильтрам.
-* Быстрый доступ к любому компоненту на любой сущности (а не только отфильтрованной и через кеш фильтра).
-* Нет ограничений на количество требований/ограничений к компонентам для фильтров.
-* Общая линейная производительность близка к `классике`, но доступ к компонентам, перекладывание сущностей по фильтрам стал несоизмеримо быстрее.
-* Прицел на использование мультимиров - нескольких экземпляров миров одновременно с разделением по ним данных для оптимизации потребления памяти.
-* Отсутствие рефлексии в ядре, возможно использование агрессивного вырезания неиспользуемого кода компилятором (code stripping, dead code elimination).
-* Совместное использование общих данных между системами происходит без рефлексии (если она допускается, то рекомендуется использовать расширение `ecslite-di` из списка расширений).
-* Реализация сущностей вернулась к обычныму типу `int`, это сократило потребление памяти. Если сущности нужно сохранять где-то - их по-прежнему нужно упаковывать в специальную структуру.
-* Маленькое ядро, весь дополнительный функционал реализуется через подключение опциональных расширений.
-* Весь новый функционал будет выходить только к `лайт`-версии, `классика` переведена в режим поддержки на исправление ошибок.
+I prefer to call them `lite` (ecs-lite) and `classic` (leoecs). The main differences of `lite` are as follows:
+* The framework's code base has been reduced by a factor of 2, making it easier to maintain and expand.
+* `Lite` is not a cut-down version of `Classic`, all functionality is preserved as the core and external modules.
+* No static data in the core.
+* No component caches in filters, reducing memory consumption and increasing transfer speed of entities across filters.
+* Fast access to any component on any entity (not just filtered and through a filter cache).
+* No restrictions on the number of component requirements or constraints for filters.
+* Overall linear performance is close to `Classic`, but access to components, transfer of entities across filters has become incomparably faster.
+* Focus on using multiple worlds - multiple instances of worlds with data partitioning for memory consumption optimization.
+* No reflection in the core, aggressive removal of unused code by the compiler (code stripping, dead code elimination) is possible.
+* Joint use of shared data between systems occurs without reflection (if allowed, it is recommended to use the extension `ecslite-di` from the extensions list).
+* Entity implementation returned to a regular `int` type, reducing memory consumption. If entities need to be saved somewhere, they still need to be packed into a special structure.
+* Small core, all additional functionality is implemented through optional extensions.
+* All new functionality will only be released to the `Lite` version, `Classic` is moved to bug fixing support mode.
 
-### Я хочу одну систему вызвать в `MonoBehaviour.Update()`, а другую - в `MonoBehaviour.FixedUpdate()`. Как я могу это сделать?
+### I want to call one system in `MonoBehaviour.Update()` and another in `MonoBehaviour.FixedUpdate()`. How can I do that?
 
-Для разделения систем на основе разных методов из `MonoBehaviour` необходимо создать под каждый метод отдельную `IEcsSystems`-группу:
+To separate systems based on different methods from `MonoBehaviour`, you need to create a separate `IEcsSystems` group for each method:
 ```c#
 IEcsSystems _update;
 IEcsSystems _fixedUpdate;
@@ -388,9 +387,9 @@ void FixedUpdate () {
 }
 ```
 
-### Меня не устраивают значения по умолчанию для полей компонентов. Как я могу это настроить?
+### I don't like the default values for component fields. How can I configure this?
 
-Компоненты поддерживают установку произвольных значений через реализацию интерфейса `IEcsAutoReset<>`:
+Components support setting arbitrary values through the implementation of the `IEcsAutoReset<>` interface:
 ```c#
 struct MyComponent : IEcsAutoReset<MyComponent> {
     public int Id;
@@ -402,12 +401,12 @@ struct MyComponent : IEcsAutoReset<MyComponent> {
     }
 }
 ```
-Этот метод будет автоматически вызываться для всех новых компонентов, а так же для всех только что удаленных, до помещения их в пул.
-> **ВАЖНО!** В случае применения `IEcsAutoReset` все дополнительные очистки/проверки полей компонента отключаются, что может привести к утечкам памяти. Ответственность лежит на пользователе!
+"This method will be automatically called for all new components as well as for all just deleted ones before placing them in the pool. IMPORTANT! When using `IEcsAutoReset`, all additional cleaning/checks of component fields are disabled, which can lead to memory leaks. Responsibility lies with the user!
 
-### Меня не устраивают значения для полей компонентов при их копировании через EcsWorld.CopyEntity() или Pool<>.Copy(). Как я могу это настроить?
 
-Компоненты поддерживают установку произвольных значений при вызове `EcsWorld.CopyEntity()` или `EcsPool<>.Copy()` через реализацию интерфейса `IEcsAutoCopy<>`:
+### I do not like the values for the component fields when they are copied through EcsWorld.CopyEntity() or Pool<>.Copy(). How can I configure this?
+
+Components support setting arbitrary values when calling `EcsWorld.CopyEntity()` or` EcsPool<>.Copy()` through the implementation of the `IEcsAutoCopy <>` interface:
 ```c#
 struct MyComponent : IEcsAutoCopy<MyComponent> {
     public int Id;
@@ -417,58 +416,58 @@ struct MyComponent : IEcsAutoCopy<MyComponent> {
     }
 }
 ```
-> **ВАЖНО!** В случае применения `IEcsAutoCopy` никакого копирования по умолчанию не происходит. Ответственность за корректность заполнения данных и за целостность исходных лежит на пользователе!
+> IMPORTANT! In case of applying `IEcsAutoCopy`, no default copying is performed. Responsibility for filling in the data correctly and for the integrity of the source lies with the user!
 
-### Я хочу сохранить ссылку на сущность в компоненте. Как я могу это сделать?
+I want to save a reference to the entity in the component. How can I do that?
 
-Для сохранения ссылки на сущность ее необходимо упаковать в один из специальных контейнеров (`EcsPackedEntity` или `EcsPackedEntityWithWorld`):
+To save a reference to the entity, you need to pack it into one of the special containers (`EcsPackedEntity` or` EcsPackedEntityWithWorld`):
 ```c#
 EcsWorld world = new EcsWorld ();
 int entity = world.NewEntity ();
 EcsPackedEntity packed = world.PackEntity (entity);
 EcsPackedEntityWithWorld packedWithWorld = world.PackEntityWithWorld (entity);
 ...
-// В момент распаковки мы проверяем - жива эта сущность или уже нет.
+// When unpacking, we check if this entity is alive or not.
 if (packed.Unpack (world, out int unpacked)) {
-    // "unpacked" является валидной сущностью и мы можем ее использовать.
+    // "unpacked" is a valid entity and we can use it.
 }
 
-// В момент распаковки мы проверяем - жива эта сущность или уже нет.
+// When unpacking, we check if this entity is alive or not.
 if (packedWithWorld.Unpack (out EcsWorld unpackedWorld, out int unpackedWithWorld)) {
-    // "unpackedWithWorld" является валидной сущностью и мы можем ее использовать.
+    // "unpackedWithWorld" is a valid entity and we can use it.
 }
 ```
 
-### Я хочу добавить реактивности и обрабатывать события изменений в мире самостоятельно. Как я могу сделать это?
+I want to add reactivity and process changes in the world myself. How can I do that?
 
-> **ВАЖНО!** Так делать не рекомендуется из-за падения производительности.
+> IMPORTANT! This is not recommended due to performance degradation.
 
-Для активации этого функционала следует добавить `LEOECSLITE_WORLD_EVENTS` в список директив комплятора, а затем - добавить слушатель событий:
+To activate this functionality, you should add `LEOECSLITE_WORLD_EVENTS` to the list of compiler directives, and then add an event listener:
 
 ```c#
 class TestWorldEventListener : IEcsWorldEventListener {
     public void OnEntityCreated (int entity) {
-        // Сущность создана - метод будет вызван в момент вызова world.NewEntity().
+        // Entity created - the method will be called at the moment of calling world.NewEntity ().
     }
 
     public void OnEntityChanged (int entity) {
-        // Сущность изменена - метод будет вызван в момент вызова pool.Add() / pool.Del().
+        // Entity changed - method will be called at the time of pool.Add () / pool.Del () call.
     }
 
     public void OnEntityDestroyed (int entity) {
-        // Сущность уничтожена - метод будет вызван в момент вызова world.DelEntity() или в момент удаления последнего компонента.
+        // Entity destroyed - method will be called when world.DelEntity () is called or when the last component is deleted.
     }
 
     public void OnFilterCreated (EcsFilter filter) {
-        // Фильтр создан - метод будет вызван в момент вызова world.Filter().End(), если фильтр не существовал ранее.
+        // Filter created - the method will be called at the time of world.Filter ().End () call if the filter did not exist before.
     }
 
     public void OnWorldResized (int newSize) {
-        // Мир изменил размеры - метод будет вызван в случае изменения размеров кешей под сущности в момент вызова world.NewEntity().
+        // The world has changed - the method will be called when the size of caches for entities changes at the time of world.NewEntity () call.
     }
 
     public void OnWorldDestroyed (EcsWorld world) {
-        // Мир уничтожен - метод будет вызван в момент вызова world.Destroy().
+        // The world is destroyed - the method will be called when world.Destroy () is called.
     }
 }
 ...
@@ -477,20 +476,20 @@ var listener = new TestWorldEventListener ();
 world.AddEventListener (listener);
 ``` 
 
-### Я хочу добавить реактивщины и обрабатывать события изменения фильтров. Как я могу это сделать?
+I want to add reactivity and process filter change events. How can I do that?
 
-> **ВАЖНО!** Так делать не рекомендуется из-за падения производительности.
+> IMPORTANT! This is not recommended due to performance degradation.
 
-Для активации этого функционала следует добавить `LEOECSLITE_FILTER_EVENTS` в список директив комплятора, а затем - добавить слушатель событий:
+To activate this functionality, you should add `LEOECSLITE_FILTER_EVENTS` to the list of compiler directives, and then add an event listener:
 
 ```c#
 class TestFilterEventListener : IEcsFilterEventListener {
     public void OnEntityAdded (int entity) {
-        // Сущность добавлена в фильтр.
+        // The entity has been added to the filter.
     }
 
     public void OnEntityRemoved (int entity) {
-        // Сущность удалена из фильтра.
+        // The entity has been removed from the filter.
     }
 }
 ...
@@ -498,4 +497,4 @@ var world = new EcsWorld ();
 var filter = world.Filter<C1> ().End ();
 var listener = new TestFilterEventListener ();
 filter.AddEventListener (listener);
-``` 
+```
